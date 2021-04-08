@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 
-#got halfway through implementing the user interface here. Realized I probably wanted a ToggleButtons instead of a lot of Buttons here, not least because displaying all the Buttons naively just stacks. But I wanted to check in the code first.
-
 row_hint = ""
 col_hint = ""
+
+#help(ipywidgets.ToggleButtons)
 
 hints = ["This is "+ x for x in ['csv', 'json', 'xml', 'xls', 'wikipedia table']]+["Separator "+ x for x in ['⏎⏎', '⏎', 'tab', 'space','|']] + ["Container "+ x for x in ['{}','[]','()', '""', "''"]]
 
 #callbacks for hint buttons
 def set_row_hint(b):
   global row_hint
-  row_hint = b.description
+  row_hint = b.new
+  #never could get this to print debug messages right...
 def set_col_hint(b):
   global col_hint
-  col_hint = b.description
+  col_hint = b.new
+  #never could get this to print debug messages right...
 
-#test ui
+#ui
 try:
   import ipywidgets
-  #could factor this out but it's not obvious that would be clearer #def button(hint):
-  for hint in hints:
-    b = ipywidgets.Button(description=hint)
-    b.on_click(set_row_hint) #"lambda cannot contain assignment" I guess
-    display(b)
-  for hint in hints:
-    b = ipywidgets.Button(description=hint)
-    b.on_click(set_col_hint) #"lambda cannot contain assignment" I guess
-    display(b)
+  #could factor this out but it's not obvious that would be clearer
+  b = ipywidgets.ToggleButtons(options=hints,description="row")
+  b.observe(set_row_hint, 'value') #I guess this is how you're supposed to do it.
+  display(b)
+  b = ipywidgets.ToggleButtons(options=hints,description="col")
+  b.observe(set_col_hint, 'value')
+  display(b)
 except Exception as e:
   if str(e) == "No module named 'ipywidgets'":
     print("You need to install ipywidgets to run this program with a graphical user interface, please run `pip install ipywidgets` or equivalent in your command line or equivalent (Sorry, end user, you cannot install python packages from within python).") #TODO: this message should be altered to reflect how we're probably just not in a jupyter notebook so any just go to that.
