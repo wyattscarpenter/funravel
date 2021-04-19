@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 #import re
+try:
+  import pandas
+except ModuleNotFoundError as e:
+  print("Pandas not found. Please install pandas on the system and try again.")
+  exit()
 
 row_hint = ""
 col_hint = ""
@@ -51,10 +56,10 @@ heuristic_table = [ # a table of heuristics, strictly sorted by priority: [test,
   [lambda t: sum(map(t.count, ['"','"']))*100 , """re.split('\\"|\\"', text)""", 'Container ""', "import re"],
   [lambda t: sum(map(t.count, ["'","'"]))*100 , """re.split("\\'|\\'", text)""", "Container ''", "import re"],
 
-  [lambda t: t.count(",")*200 , "text.split(',')", "This is csv", ""], #TODO: bug when , is lower than \t? #todo: rfc-compliance
-  [lambda t: False, "json.loads(text)", "This is json", ""], #could this actually, uh, do anything? #also, it might do everything jsony...
-  [lambda t: False, "json.loads(text)", "This is xml", ""],
-  [lambda t: False, "json.loads(text)", 'This is xls', ""],
+  [lambda t: t.count(",")*200 , "pandas.read_csv", "This is csv", "import pandas"], #TODO: bug when , is lower than \t? #todo: this technically reads it all in one step... but, the pandas automatic columing is good
+  [lambda t: sum(map(t.count, ['{','}', ","]))*10, "json.loads(text)", "This is json", "import json"], #could this actually, uh, do anything? #also, it might do everything jsony...
+  [lambda t: sum(map(t.count, ['<','>', "\\"]))*10, "re.split('\\<|\\>', text)", "This is xml", ""], #unclear if useful. maybe capture between >< when not empty?
+  [lambda t: (t.startswith("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")+ t.startswith("\x50\x4B"))*1000 , "pandas.read_excel", "This is excel", "import pandas"], # note: xls or xlsx, based on https://en.wikipedia.org/wiki/List_of_file_signatures
   [lambda t: False, "json.loads(text)", 'This is wikimedia table', ""],
 
   [lambda t: 1, "[text]", "Do nothing", ""], #you can always do nothing! --laozi (attr) #must be wrapped in list for 2d table purposes
