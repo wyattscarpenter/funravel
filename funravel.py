@@ -41,7 +41,7 @@ heuristic_table = [ # a table of heuristics, strictly sorted by priority: [test,
   [lambda t: sum(map(t.count, ['{','}', ",", '"', "'"]))*70, "pandas.read_json(text, lines=True)", "This is json", "import pandas"], #could this actually, uh, do anything? #also, it might do everything jsony...
   [lambda t: sum(map(t.count, ['<','>', "\\"]))*10, "re.split('\\<|\\>', text)", "This is xml", ""], #unclear if useful. maybe capture between >< when not empty? #later versions of pandas have a read_xml that might be useful...
   [lambda t: (t.startswith("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")+ t.startswith("\x50\x4B"))*1000 , "pandas.read_excel(StringIO(text))", "This is excel", "import pandas\nfrom io import StringIO"], # note: xls or xlsx, based on https://en.wikipedia.org/wiki/List_of_file_signatures
-  [lambda t: sum(map(t.count, ['{|','|}']))*10000, "wikitextparser.parse(text).tables[0].data()", 'This is wikimedia table', "try: import wikitextparser\nexcept Exception as e: print('please install wikitextparser in your python environment!\\n', e)"],
+  [lambda t: sum(map(t.count, ['{|','|}']))*10000, "wikitextparser.parse(text).tables[0].data()", 'This is wikimedia table', "try: import wikitextparser\nexcept Exception as e: print('please install wikitextparser in your python environment!\\n', e)"], #TODO: just remove this if we don't have wikitextparser I guess. try to import and if not, remove [-2] from this table?
 
   [lambda t: 1, "[text]", "Do nothing", ""], #you can always do nothing! --laozi (attr) #must be wrapped in list for 2d table purposes
 ]
@@ -124,9 +124,9 @@ def print_output_table(table, rowsep="<", colsep="|"): #TODO: make non-optional
 def test_funravel():
   print(funravel("f"))
   print(funravel("f,v\tv"))
-  print(funravel("we three kings.csv"))
-  print(funravel("its container time.txt"))
-  print(funravel("example_metadata.json"))
-  print(funravel("example from wikitextparser documentation.txt"))
+  print(funravel("example data/we three kings.csv"))
+  print(funravel("example data/its container time.txt"))
+  print(funravel("example data/example_metadata.json"))
+  print(funravel("example data/example from wikitextparser documentation.txt"))
 
 test_funravel()
