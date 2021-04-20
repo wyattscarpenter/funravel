@@ -56,17 +56,16 @@ heuristic_table = [ # a table of heuristics, strictly sorted by priority: [test,
   [lambda t: sum(map(t.count, ['"','"']))*100 , """re.split('\\"|\\"', text)""", 'Container ""', "import re"],
   [lambda t: sum(map(t.count, ["'","'"]))*100 , """re.split("\\'|\\'", text)""", "Container ''", "import re"],
 
-  [lambda t: t.count(",")*200 , "pandas.read_csv", "This is csv", "import pandas"], #TODO: bug when , is lower than \t? #todo: this technically reads it all in one step... but, the pandas automatic columing is good
-  [lambda t: sum(map(t.count, ['{','}', ","]))*10, "json.loads(text)", "This is json", "import json"], #could this actually, uh, do anything? #also, it might do everything jsony...
-  [lambda t: sum(map(t.count, ['<','>', "\\"]))*10, "re.split('\\<|\\>', text)", "This is xml", ""], #unclear if useful. maybe capture between >< when not empty?
-  [lambda t: (t.startswith("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")+ t.startswith("\x50\x4B"))*1000 , "pandas.read_excel", "This is excel", "import pandas"], # note: xls or xlsx, based on https://en.wikipedia.org/wiki/List_of_file_signatures
-  [lambda t: False, "json.loads(text)", 'This is wikimedia table', ""],
+  [lambda t: t.count(",")*200+t.count("\n")*1000 , "pandas.read_csv(StringIO(text))", "This is csv", "import pandas\nfrom io import StringIO"], #TODO: bug when , is lower than \t? #todo: this technically reads it all in one step... but, the pandas automatic columing is good
+  [lambda t: sum(map(t.count, ['{','}', ",", '"', "'"]))*70, "pandas.read_json(text, lines=True)", "This is json", "import pandas"], #could this actually, uh, do anything? #also, it might do everything jsony...
+  [lambda t: sum(map(t.count, ['<','>', "\\"]))*10, "re.split('\\<|\\>', text)", "This is xml", ""], #unclear if useful. maybe capture between >< when not empty? #later versions of pandas have a read_xml that might be useful...
+  [lambda t: (t.startswith("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")+ t.startswith("\x50\x4B"))*1000 , "pandas.read_excel(StringIO(text))", "This is excel", "import pandas\nfrom io import StringIO"], # note: xls or xlsx, based on https://en.wikipedia.org/wiki/List_of_file_signatures
+  [lambda t: sum(map(t.count, ['{|','|}']))*10000, "wikitextparser.parse(text).tables[0].data()", 'This is wikimedia table', "try: import wikitextparser\nexcept Exception as e: print('please install wikitextparser in your python environment!\\n', e)"],
 
   [lambda t: 1, "[text]", "Do nothing", ""], #you can always do nothing! --laozi (attr) #must be wrapped in list for 2d table purposes
 ]
 
 def funravel(text, row_hint="", col_hint=""):
-  global parser_program
   try:
       text = open(text, "r").read()
   except Exception as e:
@@ -86,10 +85,13 @@ def funravel(text, row_hint="", col_hint=""):
   print(m[1])
   row_separated_text = eval(m[1])
   print(row_separated_text)
-  text2 = row_separated_text[-1] # you know... this is PROBABLY a typical row.
-  m2 = max(heuristic_table, key = lambda h: h[0](text2))
-  parser_program += (m2[3]+"\n")
-  parser_program += ("table = ["+m2[1]+" for text in row_separated_text] \n")
+  if not m[2] in ["This is csv", "This is excel", "This is json", "This is wikimedia table"]: #abandon after first parse if we already have parsed to dataframe... the data structure pandas returns will complain mightly otherwise
+    text2 = row_separated_text[-1] # you know... this is PROBABLY a typical row.
+    m2 = max(heuristic_table, key = lambda h: h[0](text2))
+    parser_program += (m2[3]+"\n")
+    parser_program += ("table = ["+m2[1]+" for text in row_separated_text] \n")
+  else:
+    parser_program += ("table = row_separated_text") #kind of unclear, must fix.
   local_variables_from_exec_dict = {"text": text} #this is just how you have to do this
   exec(parser_program, globals(), local_variables_from_exec_dict)
   table = local_variables_from_exec_dict['table']
@@ -110,5 +112,7 @@ def test_funravel():
   print(funravel("f,v\tv"))
   print(funravel("we three kings.csv"))
   print(funravel("its container time.txt"))
+  print(funravel("example_metadata.json"))
+  print(funravel("example from wikitextparser documentation.txt"))
 
 test_funravel()
