@@ -6,8 +6,12 @@ except ModuleNotFoundError as e:
   print("Pandas not found. Please install pandas on the system and try again.")
   exit()
 
+#All these globals are messy but I don't think I can pass more info around in the callbacks :/
+text = ""
 row_hint = ""
 col_hint = ""
+#TODO: use techniques in https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20Asynchronous.html to let the code run again, instead of just using this global, side-effecty variable.
+table = []
 
 #callbacks for hint buttons
 #TODO: clear display and rerun main function after doing this, and make the main function take hints accordingly.
@@ -15,9 +19,12 @@ col_hint = ""
 def set_row_hint(b):
   global row_hint
   row_hint = b.new
+  funravel(text, row_hint, col_hint)
+
 def set_col_hint(b):
   global col_hint
   col_hint = b.new
+  funravel(text, row_hint, col_hint)
 
 heuristic_table = [ # a table of heuristics, strictly sorted by priority: [test, code, description]
   #h[0] heuristic (eta score) is just some code, which we call with the text, so please don't have side effects.
@@ -46,7 +53,16 @@ heuristic_table = [ # a table of heuristics, strictly sorted by priority: [test,
   [lambda t: 1, "[text]", "Do nothing", ""], #you can always do nothing! --laozi (attr) #must be wrapped in list for 2d table purposes
 ]
 
-def funravel(text, row_hint="", col_hint=""):
+def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separator_rule=""):
+  global table
+  global row_hint
+  global col_hint
+  global text
+
+  row_hint = hint_for_row_separator_rule
+  col_hint = hint_for_col_separator_rule
+  text = text_to_parse
+
   try:
       text = open(text, "r").read()
   except Exception as e:
@@ -90,11 +106,11 @@ def funravel(text, row_hint="", col_hint=""):
   try:
     import ipywidgets
     #clear_output() #could set wait=True if that seemed interesting...
-    #TODO: set initially selected button based on what rule is being used.
-    b = ipywidgets.ToggleButtons(options=hints,description="row")
+    #Note that we set initially selected button based on what rule is being used.
+    b = ipywidgets.ToggleButtons(options=hints, description="row", value=m[2])
     b.observe(set_row_hint, 'value') #I guess this is how you're supposed to do it.
     display(b)
-    b = ipywidgets.ToggleButtons(options=hints,description="col")
+    b = ipywidgets.ToggleButtons(options=hints, description="col", value=m2[2])
     b.observe(set_col_hint, 'value')
     display(b)
   except Exception as e:
@@ -112,9 +128,9 @@ def funravel(text, row_hint="", col_hint=""):
   
   return table
 
-#TODO: post-processing
+#TODO: post-processing option?
 
-def print_output_table(table, rowsep="<", colsep="|"): #TODO: make non-optional
+def print_output_table(table, rowsep="<", colsep="|"): #TODO: This is currently just dummied in with odd separators and will need refinement
   """here we print the output table to the user, formatted appropriately with the separators.
   The way we do this is, we cheat a little, to maintain the illusion of in-place formatting."""
   #NOTE: just tabs and newlines thus far...
