@@ -6,16 +6,20 @@ except ModuleNotFoundError as e:
   print("Pandas not found. Please install pandas on the system and try again.")
   exit()
 
+#debug print
+debug = False
+def dprint(s):
+  if debug: print(s)
+
 #All these globals are messy but I don't think I can pass more info around in the callbacks :/
 text = ""
 row_hint = ""
 col_hint = ""
+#TODO: it's not actually clear how to make the main function only return a value once all the computation is confirmed?
 #TODO: use techniques in https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20Asynchronous.html to let the code run again, instead of just using this global, side-effecty variable.
 table = []
 
 #callbacks for hint buttons
-#TODO: clear display and rerun main function after doing this, and make the main function take hints accordingly.
-#TODO: it's not actually clear how to make the main function only return a value once all the computation is confirmed?
 def set_row_hint(b):
   global row_hint
   row_hint = b.new
@@ -26,31 +30,34 @@ def set_col_hint(b):
   col_hint = b.new
   funravel(text, row_hint, col_hint)
 
+#TODO: I think it probably makes more sense, on reflection, to have an "alpha table" of known formats go first, the "this is"s, and let the option "custom format" be the default if none are detected
+# unclear if I will have time to make and evaluate that change in time though. Probably not too hard to code.
+
 heuristic_table = [ # a table of heuristics, strictly sorted by priority: [test, code, description]
   #h[0] heuristic (eta score) is just some code, which we call with the text, so please don't have side effects.
   #h[1] evaled string(!) results in an array of the rows (or, columns). Again, no side-effects please. Tho, python strings should be immutable so risks are low.
   #h[2] is the identifier of the method, which is also the "hint" and the button label, if those are used.
   #h[3] is the literal string literal imports the h[1] code will need to work
 
-  [lambda t: t.count("\n\n")*2000, "text.split('\\n\\n')", "Separator ⏎⏎",   "" ], #NOTE: double escaped \n in [1] bc of eval
-  [lambda t: t.count("\n")*1000,   "text.split('\\n')",    "Separator ⏎",    "" ], #NOTE: double escaped \n in [1] bc of eval
-  [lambda t: t.count("\t")*100,    "text.split('\t')",     "Separator tab",  "" ],
-  [lambda t: t.count("|")*50,      "text.split('|')",      "Separator |",    "" ],
-  [lambda t: t.count(" ")*10,      "text.split(' ')",     "Separator space", "" ],
+  [lambda t: t.count("\n\n")*2000, "text.split('\\n\\n')", "Separator ⏎⏎",   "" , "⏎⏎"    ], #NOTE: double escaped \n in [1] bc of eval
+  [lambda t: t.count("\n")*1000,   "text.split('\\n')",    "Separator ⏎",    "" , "⏎"     ], #NOTE: double escaped \n in [1] bc of eval
+  [lambda t: t.count("\t")*100,    "text.split('\t')",     "Separator tab",  "" , "tab"   ],
+  [lambda t: t.count("|")*50,      "text.split('|')",      "Separator |",    "" , "|"     ],
+  [lambda t: t.count(" ")*10,      "text.split(' ')",     "Separator space", "" , "space" ],
   
-  [lambda t: sum(map(t.count, ['{','}']))*100 , "re.split('\\{|\\}', text)", "Container {}", "import re"], #might redo this whole concept later
-  [lambda t: sum(map(t.count, ['[',']']))*100 , "re.split('\\[|\\]', text)", "Container []", "import re"],
-  [lambda t: sum(map(t.count, ['(',')']))*100 , "re.split('\\(|\\)', text)", "Container ()", "import re"],
-  [lambda t: sum(map(t.count, ['"','"']))*100 , """re.split('\\"|\\"', text)""", 'Container ""', "import re"],
-  [lambda t: sum(map(t.count, ["'","'"]))*100 , """re.split("\\'|\\'", text)""", "Container ''", "import re"],
+  [lambda t: sum(map(t.count, ['{','}']))*100 , "re.split('\\{|\\}', text)", "Container {}", "import re",     "}…{"], #might redo this whole concept later
+  [lambda t: sum(map(t.count, ['[',']']))*100 , "re.split('\\[|\\]', text)", "Container []", "import re",     "]…["],
+  [lambda t: sum(map(t.count, ['(',')']))*100 , "re.split('\\(|\\)', text)", "Container ()", "import re",     ")…("],
+  [lambda t: sum(map(t.count, ['"','"']))*100 , """re.split('\\"|\\"', text)""", 'Container ""', "import re", '"…"'],
+  [lambda t: sum(map(t.count, ["'","'"]))*100 , """re.split("\\'|\\'", text)""", "Container ''", "import re", "'…'"],
 
-  [lambda t: t.count(",")*200+t.count("\n")*1000 , "pandas.read_csv(StringIO(text))", "This is csv", "import pandas\nfrom io import StringIO"], #TODO: bug when , is lower than \t? #todo: this technically reads it all in one step... but, the pandas automatic columing is good
-  [lambda t: sum(map(t.count, ['{','}', ",", '"', "'"]))*70, "pandas.read_json(text, lines=True)", "This is json", "import pandas"], #could this actually, uh, do anything? #also, it might do everything jsony...
-  [lambda t: sum(map(t.count, ['<','>', "\\"]))*10, "re.split('\\<|\\>', text)", "This is xml", ""], #unclear if useful. maybe capture between >< when not empty? #later versions of pandas have a read_xml that might be useful...
-  [lambda t: (t.startswith("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")+ t.startswith("\x50\x4B"))*1000 , "pandas.read_excel(StringIO(text))", "This is excel", "import pandas\nfrom io import StringIO"], # note: xls or xlsx, based on https://en.wikipedia.org/wiki/List_of_file_signatures
-  [lambda t: sum(map(t.count, ['{|','|}']))*10000, "wikitextparser.parse(text).tables[0].data()", 'This is wikimedia table', "try: import wikitextparser\nexcept Exception as e: print('please install wikitextparser in your python environment!\\n', e)"], #TODO: just remove this if we don't have wikitextparser I guess. try to import and if not, remove [-2] from this table?
+  [lambda t: t.count(",")*200+t.count("\n")*1000 , "pandas.read_csv(StringIO(text))", "This is csv", "import pandas\nfrom io import StringIO", ","], #TODO: bug when , is lower than \t? #todo: this technically reads it all in one step... but, the pandas automatic columing is good
+  [lambda t: sum(map(t.count, ['{','}', ",", '"', "'"]))*70, "pandas.read_json(text, lines=True)", "This is json", "import pandas", "…"], #could this actually, uh, do anything? #also, it might do everything jsony...
+  [lambda t: sum(map(t.count, ['<','>', "\\"]))*10, "re.split('\\<|\\>', text)", "This is xml", "", "<…>"], #unclear if useful. maybe capture between >< when not empty? #later versions of pandas have a read_xml that might be useful...
+  [lambda t: (t.startswith("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")+ t.startswith("\x50\x4B"))*1000 , "pandas.read_excel(StringIO(text))", "This is excel", "import pandas\nfrom io import StringIO", ""], # note: xls or xlsx, based on https://en.wikipedia.org/wiki/List_of_file_signatures
+  [lambda t: sum(map(t.count, ['{|','|}']))*10000, "wikitextparser.parse(text).tables[0].data()", 'This is wikimedia table', "try: import wikitextparser\nexcept Exception as e: print('please install wikitextparser in your python environment!\\n', e)", "||"], #TODO: just remove this if we don't have wikitextparser I guess. try to import and if not, remove [-2] from this table?
 
-  [lambda t: 1, "[text]", "Do nothing", ""], #you can always do nothing! --laozi (attr) #must be wrapped in list for 2d table purposes
+  [lambda t: 1, "[text]", "Do nothing", "", ""], #you can always do nothing! --laozi (attr) #must be wrapped in list for 2d table purposes
 ]
 
 def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separator_rule=""):
@@ -82,11 +89,14 @@ def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separat
   else: 
     m = max(heuristic_table, key = lambda h: h[0](text))
   exec(m[3])
+  row_sep = m[4] #TODO: hmm maybe not techincally correct if the [4] is specifically the thing between records in the same line. Well, whatever for now. Don't have good examples yet.
+  col_sep = ""
   parser_program += (m[3]+"\n")
   parser_program += ("row_separated_text = "+m[1]+"\n")
-  print(m[1])
+  dprint(m[1])
+  
   row_separated_text = eval(m[1])
-  print(row_separated_text)
+  dprint(row_separated_text)
   if not m[2] in ["This is csv", "This is excel", "This is json", "This is wikimedia table"]: #abandon after first parse if we already have parsed to dataframe... the data structure pandas returns will complain mightly otherwise
     #if we are passed a hint, use it!
     if col_hint in hints:
@@ -94,6 +104,7 @@ def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separat
     else: 
       text2 = row_separated_text[-1] # you know... this is PROBABLY a typical row.
       m2 = max(heuristic_table, key = lambda h: h[0](text2))
+      col_sep = m2[4]
       parser_program += (m2[3]+"\n")
       parser_program += ("table = ["+m2[1]+" for text in row_separated_text] \n")
   else:
@@ -123,7 +134,8 @@ def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separat
     print("The interactive display could not be started so you must manually pass hints to the function in python code.") #improve error message
     print("If you would like to use the interactive display please make sure you are operating in a Jupyter Notebook or similar IPython environment.") #improve error message
 
-  print_output_table(table)
+  print_output_table(table, row_sep, col_sep)
+  print("#You can use this python code to make similar files into tables")
   print(parser_program)
   
   return table
