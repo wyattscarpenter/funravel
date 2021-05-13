@@ -1,0 +1,6 @@
+print(funravel("f"))
+print(funravel("f,v\tv"))
+print(funravel("example data/we three kings.csv"))
+print(funravel("example data/its container time.txt"))
+print(funravel("example data/example_metadata.json"))
+print(funravel("example data/example from wikitextparser documentation.txt"))
