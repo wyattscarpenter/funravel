@@ -75,14 +75,17 @@ def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separat
   except Exception as e:
     print(e)
     print("Since the text was not a valid filename, I assume it is the text to operate on:") #must improve this message
-  print("\n"+text)
+  if len(text) < 1000:
+    print(text)
+  else:
+    print(text[:998]+"...") #print a preview of the file
 
   #We have to detect what to parse, do one level of parse to detect the second level of parse, put the operations into the parser_program, and then exec the parser program
   #(We don't just immediately do the parse because we want to ensure the parser program output to be exactly the same as our output here.)
   #We could use eval here, instead of exec, but I wanted to have multiple lines of code to make the line(s) slightly less "scary". however, this also means the code snippet introduces more variables.
   
   hints = [row[2] for row in heuristic_table]
-  parser_program = ""
+  parser_program = "\n#You can use this python code to make similar files into tables\n"
   #if we are passed a hint, use it!
   if row_hint in hints:
     m = [h for h in heuristic_table if h[2] == row_hint][0]
@@ -135,12 +138,9 @@ def funravel(text_to_parse, hint_for_row_separator_rule="", hint_for_col_separat
     print("If you would like to use the interactive display please make sure you are operating in a Jupyter Notebook or similar IPython environment.") #improve error message
 
   print_output_table(table, row_sep, col_sep)
-  print("#You can use this python code to make similar files into tables")
   print(parser_program)
   
   return table
-
-#TODO: post-processing option?
 
 def print_output_table(table, rowsep="<", colsep="|"): #TODO: This is currently just dummied in with odd separators and will need refinement
   """here we print the output table to the user, formatted appropriately with the separators.
@@ -148,13 +148,3 @@ def print_output_table(table, rowsep="<", colsep="|"): #TODO: This is currently 
   #NOTE: just tabs and newlines thus far...
   for row in table:
       print(("\t"+colsep+" ").join(row)+"\t"+rowsep) #tabs probably won't cut it... will have to compute/format more. maybe df has builtin jazz?
-
-def test_funravel():
-  print(funravel("f"))
-  print(funravel("f,v\tv"))
-  print(funravel("example data/we three kings.csv"))
-  print(funravel("example data/its container time.txt"))
-  print(funravel("example data/example_metadata.json"))
-  print(funravel("example data/example from wikitextparser documentation.txt"))
-
-test_funravel()
