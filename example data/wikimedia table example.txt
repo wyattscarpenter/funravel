@@ -1,0 +1,7 @@
+{|
+|  Polar Bear    ||   White   ||   Largest
+|-
+|   Grizzly Bear ||   Brown   ||   Large
+|-
+|   Black Bear   || Black     ||  Medium
+|}
