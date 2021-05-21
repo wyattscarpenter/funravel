@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-#known issue: on the windows command line, we sometimes emit "←[2K" for some reason (some kind of ansi code). As far as I recall this didn't used to be a problem, so I must have changed something.
-
 try:
   import pandas
 except ModuleNotFoundError as e:
@@ -9,7 +7,7 @@ except ModuleNotFoundError as e:
   exit()
 
 #debug print
-debug = True #True #False
+debug = False #True #False
 def dprint(*s):
   if debug: print(*s)
 
@@ -79,6 +77,8 @@ heuristic_table = [ # a table of heuristics, the "eta table", unsorted.
 def clear_output():
   try:
     from IPython.display import clear_output
+    #if on the windows command line, clear_output just emits "←[2K" (ANSI command sequence Erase in Line) which is undesireable. So we "try" to call display first, so we can fail out of this path unless we're actually in an IPython environment.
+    display()
     clear_output(wait=True) #setting wait to true makes the display just a little less studdery, as it doesn't clear then draw t draws then clears.
   except:
     pass #guess we aren't in an IPython environment! Well, no need to clear the interactive display anyway, then.
@@ -129,8 +129,8 @@ def funravel(text_to_parse, hint_for_known_format_rule="", hint_for_row_separato
   else:
     print(text[:998]+"...") #print a preview of the file
   print()
-  try: #There's some sort of error where when one picks inapplicable separators or known formats, there's no table left sometimes, resulting in a crash. This despite the fact that inapplicable separators should simply return their argument as a list.
-    abject_failure = False
+  try:
+    abject_failure = False #this error should almost never occur anymore, but just to be safe... (it will occur for XML in older versions of pandas, for example)
     #try known formats first
     format_hints = [f[2] for f in known_format_table]
     if format_hint in format_hints: #if we are passed a valid hint, 
