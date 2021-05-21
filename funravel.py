@@ -167,10 +167,11 @@ def funravel(text_to_parse, hint_for_known_format_rule="", hint_for_row_separato
       else: 
         text2 = row_separated_text[-1] # you know... this is PROBABLY a typical row.
         m2 = max(heuristic_table, key = lambda h: h[0](text2))
-        col_sep = m2[4]
-        if m2[3]: parser_program += (m2[3]+"\n")
-        parser_program += ("table = ["+m2[1]+" for text in row_separated_text] \n")
-        parser_program += ("table = pandas.DataFrame(table)")
+      col_sep = m2[4]
+      if m2[3]:
+        parser_program += (m2[3]+"\n")
+      parser_program += ("table = ["+m2[1]+" for text in row_separated_text] \n")
+      parser_program += ("table = pandas.DataFrame(table)")
 
     local_variables_from_exec_dict = {"text": text} #this is just how you have to do this
     dprint("final parser program for custom format:", parser_program)
