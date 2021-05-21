@@ -96,7 +96,7 @@ def try_format(format, text):
     dprint(e)
     return False
 
-def funravel(text_to_parse, hint_for_known_format_rule="", hint_for_row_separator_rule="", hint_for_col_separator_rule=""):
+def turn_text_into_table(text_to_parse, hint_for_known_format_rule="", hint_for_row_separator_rule="", hint_for_col_separator_rule=""):
   clear_output()
 
   global table
