@@ -23,17 +23,17 @@ table = []
 def set_format_hint(b):
   global format_hint
   format_hint = b.new
-  funravel(input_text, format_hint, row_hint, col_hint)
+  turn_text_into_table(input_text, format_hint, row_hint, col_hint)
 
 def set_row_hint(b):
   global row_hint
   row_hint = b.new
-  funravel(input_text, format_hint, row_hint, col_hint)
+  turn_text_into_table(input_text, format_hint, row_hint, col_hint)
 
 def set_col_hint(b):
   global col_hint
   col_hint = b.new
-  funravel(input_text, format_hint, row_hint, col_hint)
+  turn_text_into_table(input_text, format_hint, row_hint, col_hint)
 
 known_format_table = [ #"alpha table" of known formats to go first. strictly sorted by priority (from least to most specific ( ≈ likely to succeed)). the option "custom format" be the default if none are detected.
   #a[0] is currently "is known format", I guess.
