@@ -1,0 +1,12 @@
+<!-- Not public domain: from https://en.wikipedia.org/wiki/Classic_Chinese_Novels -->
+{| class="wikitable" style="text-align:center"
+! English !! Simplified Chinese !! Traditional Chinese !! Pinyin !! Attributed to !! Century
+|-
+|''[[Romance of the Three Kingdoms]]'' || {{lang|zh-hans|[[:zh:三国演义|三国演义]]}} || {{lang|zh-hant|三國演義}} || {{nowrap|{{lang|zh-Latn|Sānguó Yǎnyì}}}} || {{nowrap|[[Luo Guanzhong]]}} || 14th
+|-
+|''[[Water Margin]]'' || {{lang|zh-hans|[[:zh:水浒传|水浒传]]}} || {{lang|zh-hant|水滸傳}} || {{lang|zh-Latn|Shuǐhǔ Zhuàn}} || [[Shi Nai'an]]{{efn|There is considerable debate on the authorship of ''Water Margin''. While most attribute the novel to [[Shi Nai'an]], there were some who believe that the novel, or portions of it, was written by others, such as [[Luo Guanzhong]] (the author of ''[[Romance of the Three Kingdoms]]''), Shi Hui ({{lang|zh|施惠}}) and Guo Xun ({{lang|zh-hant|郭勛}}).}} || 14th
+|-
+|''[[Journey to the West]]'' || {{lang|zh-hans|[[:zh:西游记|西游记]]}} || {{lang|zh-hant|西遊記}} || {{lang|zh-Latn|Xī Yóu Jì}} || [[Wu Cheng'en]] || 16th
+|-
+|''[[Dream of the Red Chamber]]'' || {{lang|zh-hans|[[:zh:红楼梦|红楼梦]]}} || {{lang|zh-hant|紅樓夢}} || {{nowrap|{{lang|zh-Latn|Hónglóu Mèng}}}} || [[Cao Xueqin]] || 18th 
+|}

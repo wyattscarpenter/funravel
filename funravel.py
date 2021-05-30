@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import unicodedata
 
 try:
   import pandas
@@ -115,13 +116,13 @@ def turn_text_into_table(text_to_parse, hint_for_known_format_rule="", hint_for_
   col_sep = ""
 
   try:
-      text = open(input_text, "r").read()
+      text = open(input_text, "r", encoding="utf8").read()
   except Exception as e:
     #if str(e).startswith("[Errno 2] No such file or directory:") or str(e).startswith("[Errno 22] Invalid argument:") or str(e).startswith("[Errno 36] File name too long:"):
     #let's just catch all the errors, actually.
+    dprint(e)
     print("Since the text was not a valid file name, I assume it is the text to operate on.")
     text = input_text
-    #else: print(e)
   print() #linebreak
   print("Input preview:")
   if len(text) < 1000:
@@ -226,6 +227,16 @@ def turn_text_into_table(text_to_parse, hint_for_known_format_rule="", hint_for_
       print(parser_program) # It seemed like a good idea to print the parsing program into new Jupyter cell (we may have to overwrite it though) so the user can run it, but unfortunately over the history of jupyter notebooks this seems to have gone from trivial to impossible for our purposes.
   return table
 
+def unicode_aware_width(s): #doesn't handling zero-width
+  width = 0
+  for char in s:
+    width += 1
+    if unicodedata.east_asian_width(char) in ['W', 'F']: width += 1
+  return width
+
+def unicode_aware_left_justify(string, width, character=" "):
+  return string + character*(width-unicode_aware_width(string))
+
 def print_output_table(dataframe, rowsep, colsep, demo=False, max_rows=5):
   """here we print the output table to the user, formatted appropriately with the separators.
   The way we do this is, we cheat a little, to maintain the illusion of in-place formatting."""
@@ -246,6 +257,6 @@ def print_output_table(dataframe, rowsep, colsep, demo=False, max_rows=5):
   for index, column in enumerate(dataframe.head(max_rows)):
     max_widths[index] = 0
     for value in dataframe[column].values:
-      if value and max_widths[index] < len(str(value)): max_widths[index] = len(str(value))
+      if value and max_widths[index] < unicode_aware_width(str(value)): max_widths[index] = unicode_aware_width(str(value))
   for row in dataframe.head(max_rows).values.tolist():
-      print((" "+colsep+" ").join([str(v).ljust(max_widths[i]) for i, v in enumerate(row) if v])+rowsep)
+      print((" "+colsep+" ").join([unicode_aware_left_justify(str(v), max_widths[i]) for i, v in enumerate(row) if v])+rowsep)
