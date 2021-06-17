@@ -227,7 +227,8 @@ def turn_text_into_table(text_to_parse, hint_for_known_format_rule="", hint_for_
       print(parser_program) # It seemed like a good idea to print the parsing program into new Jupyter cell (we may have to overwrite it though) so the user can run it, but unfortunately over the history of jupyter notebooks this seems to have gone from trivial to impossible for our purposes.
   return table
 
-def unicode_aware_width(s): #doesn't handling zero-width
+def unicode_aware_width(s): #doesn't handle zero-width characters
+  #Annoyingly, in this monospaced font in my browser, fullwidth characters consume SLIGHTLY LESS than two character widths. So this still doesn't align properly :(
   width = 0
   for char in s:
     width += 1
